@@ -16,6 +16,9 @@ def help():
 '''
 Usage:
       python main.py source_file "keyword1|keyword2"
+
+Example:
+      python main.py test_check.xlsx "233|亮|暗"
 '''
 
 def doCheck(keywordlist):
@@ -57,10 +60,15 @@ def doCheck(keywordlist):
         finalIndex = finalIndex + 1
     #list(map(print, final_result[keywordlist[2]])) #not support in python 2.x
     #print final_result[keywordlist[2]]
-    for item in final_result[keywordlist[2]]:
-        #print item
-        for key, value in item.iteritems():
-            print 'index is %s, feedback is %s' % (key, value)
+    for x in range(0,len(keywordlist)):
+        print 'keyword is %s:' % keywordlist[x]
+        if len(final_result[keywordlist[x]]) == 0:
+            print 'Empty'
+            continue
+        for item in final_result[keywordlist[x]]:
+            #print item
+            for key, value in item.iteritems():
+                print 'index is %s, feedback is %s' % (key, value)
 
 if __name__ == "__main__":
     if (len(sys.argv) < 2):
