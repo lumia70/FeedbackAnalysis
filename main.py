@@ -10,10 +10,34 @@ from datetime import datetime
 
 filename = ""
 final_result = {}
+#------------------------------------------------
+# ----- final_result is a dict like this:       |
+# ----- {'keyword_1': [                         |
+# -----                {index_1: 'feedback_1'}, |
+# -----                {index_2: 'feedback_2'}  |
+# -----               ],                        |
+# -----  'keyword_2': [{...},                   |
+# -----                {...}                    |
+# -----               ]                         |
+# ----- }                                       |
+#------------------------------------------------
+
 
 def help():
     print \
 '''
+Requirement:
+      Firstly, you should install xlrd and xlwt module to
+      read&write excel, use the command below:
+
+      on Ubuntu(maybe need sudo privilege):
+      pip install xlrd
+      pip install xlwt
+
+      on Windows:
+      python -m pip install xlrd
+      python -m pip install xlwt
+
 Usage:
       python main.py source_file "keyword1|keyword2"
 
@@ -21,52 +45,43 @@ Example:
       python main.py test_check.xlsx "233|亮|暗"
 '''
 
-def doCheck(keywordlist):
+
+def do_check(keywordlist):
     print 'Now we check'
+    # get the keyword, and init the final result structure
     for item in keywordlist:
         final_result[item] = []
-    #print final_result
-    #exit()
+    # open excel
     check_file = xlrd.open_workbook(filename)
+    # get the 1st sheet page, can modify it
     opened_sheet = check_file.sheet_by_index(0)
-    #print opened_sheet.cell_value(rowx=18, colx=6)
     result = []
     for row_index in range(opened_sheet.nrows):
-        #print 'now at index ' + str(row_index)
-        #print type(opened_sheet.cell_value(rowx = row_index, colx = 6)) is not unicode
-        if type(opened_sheet.cell_value(rowx = row_index, colx = 6)) is not unicode:
-            #print 'not unicode'
-            result.append(str(opened_sheet.cell_value(rowx = row_index, colx = 6)))
+        # get the 7th column cell value, can modify it
+        unchecked_item = opened_sheet.cell_value(rowx=row_index, colx=6)
+        # change cell value to string or unicode to make it easy to store and compare
+        if type(unchecked_item) is not unicode:
+            result.append(str(unchecked_item))
         else:
-            #print 'unicode'
-            result.append(u''.join(opened_sheet.cell_value(rowx = row_index, colx = 6)).encode('utf-8').strip())
-        #result.append(u''.join(opened_sheet.cell_value(rowx = row_index, colx = 6)).encode('utf-8').strip())
-        #if ((u''.join(opened_sheet.cell_value(rowx = row_index, colx = 6)).encode('utf-8').strip()).find(u'亮') != -1):
-        #    print 'find it! row index is ' + str(row_index) + ' ' + opened_sheet.cell_value(rowx = row_index, colx = 6)
-    finalIndex = 0
+            result.append(u''.join(unchecked_item).encode('utf-8').strip())
+    # define the index to mark the position of item we've found in the whole sheet
+    final_index = 0
+    # do the search
     for item in result:
-        #print type(item)
-        #print item
         if(type(item) is not unicode):
-            for keywordItem in keywordlist:
-                if(item.decode('utf-8').find(keywordItem.decode('utf-8')) != -1):
-                    #print item
-                    #print keywordItem
-                    singleItem = {finalIndex:item}
-                    final_result[keywordItem].append(singleItem)
-                #else:
-                #    print 'not found %s' %keywordItem
+            for keyword_item in keywordlist:
+                if(item.decode('utf-8').find(keyword_item.decode('utf-8')) != -1):
+                    single_item = {final_index: item}
+                    final_result[keyword_item].append(single_item)
 
-        finalIndex = finalIndex + 1
-    #list(map(print, final_result[keywordlist[2]])) #not support in python 2.x
-    #print final_result[keywordlist[2]]
-    for x in range(0,len(keywordlist)):
+        final_index = final_index + 1
+    # output the result to terminal
+    for x in range(0, len(keywordlist)):
         print 'keyword is %s:' % keywordlist[x]
         if len(final_result[keywordlist[x]]) == 0:
             print 'Empty'
             continue
         for item in final_result[keywordlist[x]]:
-            #print item
             for key, value in item.iteritems():
                 print 'index is %s, feedback is %s' % (key, value)
 
@@ -75,10 +90,10 @@ if __name__ == "__main__":
         help()
         exit()
     else:
+        # get the filename and keyword in command line parameters
         filename = sys.argv[1]
         raw_keywordlist = sys.argv[2].rstrip().split("|")
-        #print raw_keywordlist[2].decode('utf-8').encode('utf-8')
         if (not os.path.exists(filename)):
-            print 'Cann\'t find the file --- %s' %filename
+            print 'Cann\'t find the file --- %s' % filename
             exit()
-        doCheck(raw_keywordlist)
+        do_check(raw_keywordlist)
